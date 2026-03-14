@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
-from warnings import warn
-import argparse
+from dataclasses import dataclass
 import importlib
 import os
 import shutil
 import sys
 from pathlib import Path
 
-import warnings
-warnings.filterwarnings("ignore")
-
+import tyro
 
 
 def copy_first_match(src_root: Path, filename: str, dst_path: Path) -> bool:
@@ -44,40 +41,18 @@ def validate_required_assets(project_root: Path) -> None:
         sys.exit(1)
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Download SD3 + TSD-SR inference assets"
+@dataclass
+class Args:
+    project_root: Path = Path(__file__).resolve().parents[1]
+    sd3_repo: str = "stabilityai/stable-diffusion-3-medium-diffusers"
+    tsdsr_drive_url: str = (
+        "https://drive.google.com/drive/folders/1XJY9Qxhz0mqjTtgDXr07oFy9eJr8jphI"
     )
-    parser.add_argument(
-        "--project_root",
-        type=Path,
-        default=Path(__file__).resolve().parents[1],
-        help="Path to the TSD-SR project root",
-    )
-    parser.add_argument(
-        "--sd3_repo",
-        type=str,
-        default="stabilityai/stable-diffusion-3-medium-diffusers",
-        help="Hugging Face model repo id",
-    )
-    parser.add_argument(
-        "--tsdsr_drive_url",
-        type=str,
-        default="https://drive.google.com/drive/folders/1XJY9Qxhz0mqjTtgDXr07oFy9eJr8jphI",
-        help="Google Drive folder URL from the official README",
-    )
-    parser.add_argument(
-        "--skip_sd3",
-        action="store_true",
-        help="Skip downloading SD3 from Hugging Face",
-    )
-    parser.add_argument(
-        "--skip_tsdsr",
-        action="store_true",
-        help="Skip downloading TSD-SR assets from Google Drive",
-    )
-    args = parser.parse_args()
+    skip_sd3: bool = False
+    skip_tsdsr: bool = False
 
+
+def main(args: Args) -> None:
     project_root = args.project_root.resolve()
     checkpoint_dir = project_root / "checkpoint"
     sd3_dir = checkpoint_dir / "sd3-medium"
@@ -99,9 +74,11 @@ def main() -> None:
     print("      (requires Hugging Face access to SD3; set HF_TOKEN if needed)")
     if not args.skip_sd3:
         try:
-            from huggingface_hub import snapshot_download
+            snapshot_download = importlib.import_module(
+                "huggingface_hub"
+            ).snapshot_download
             # snapshot_download = importlib.import_module(
-                # "huggingface_hub"
+            # "huggingface_hub"
             # ).snapshot_download
 
             snapshot_download(
@@ -159,4 +136,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    main(tyro.cli(Args))

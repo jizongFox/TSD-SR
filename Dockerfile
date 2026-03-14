@@ -32,7 +32,9 @@ RUN python -m pip install --upgrade pip setuptools wheel && \
     tqdm \
     gdown \
     sentencepiece \
-    huggingface_hub[hf_transfer]
+    huggingface_hub[hf_transfer] \
+    tyro \
+    einops
 
 COPY . /workspace/TSD-SR
 

@@ -1,6 +1,4 @@
 diffusers==0.29.1
-torch==2.2.2 
-torchvision==0.17.2
 pyiqa==0.1.13
 transformers==4.49.0
 # xformers
@@ -10,3 +8,5 @@ accelerate
 numpy==1.24.4
 wandb
 loralib==0.1.2
+einops
+tyro

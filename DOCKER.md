@@ -5,7 +5,7 @@ This setup uses `pytorch/pytorch:2.7.0-cuda12.8-cudnn9-devel` and runs TSD-SR on
 ## 1) Build image
 
 ```bash
-bash script/docker_build.sh tsd-sr:cu128 docker-build.log
+python script/docker_build.py --image-tag tsd-sr:cu128 --log-file docker-build.log
 ```
 
 This prints full build logs to terminal and also saves them to `docker-build.log`.
@@ -75,7 +75,26 @@ Expected files after download:
 Put image in repo, for example: `imgs/test/my_blurry.png`
 
 ```bash
-bash script/deblur.sh imgs/test/my_blurry.png outputs/deblur
+python script/deblur.py --input-path imgs/test/my_blurry.png --output-dir outputs/deblur
 ```
 
 Output is written to `outputs/deblur/` with same filename and same spatial size.
+
+## 5) Folder-to-folder inference (preserve relative paths)
+
+This maps one host folder as input and one host folder as output. The output keeps the same subfolder structure as input.
+
+```bash
+python script/docker_infer_folder.py \
+  --host-input-folder /path/on/host/input_images \
+  --host-output-folder /path/on/host/output_images \
+  --image-tag tsd-sr:cu128
+```
+
+Example:
+
+```bash
+python script/docker_infer_folder.py \
+  --host-input-folder /data/blur_set \
+  --host-output-folder /data/deblur_set
+```
