@@ -61,6 +61,18 @@ def parse_args():
         action="store_true",
         help="preserve input folder structure under output_dir",
     )
+    parser.add_argument(
+        "--num_shards",
+        type=int,
+        default=1,
+        help="total shard count for parallel workers",
+    )
+    parser.add_argument(
+        "--shard_id",
+        type=int,
+        default=0,
+        help="current shard id in [0, num_shards-1]",
+    )
 
     parser.add_argument("--rank", type=int, default=64, help="rank for transformer")
     parser.add_argument("--rank_vae", type=int, default=64, help="rank for vae")
@@ -130,6 +142,20 @@ def collect_image_paths(input_dir, recursive=False):
             ):
                 image_paths.append(file_path)
     return sorted(image_paths)
+
+
+def shard_image_paths(image_paths, num_shards, shard_id):
+    if num_shards < 1:
+        raise ValueError(f"num_shards must be >= 1, got {num_shards}")
+    if shard_id < 0 or shard_id >= num_shards:
+        raise ValueError(f"shard_id must be in [0, {num_shards - 1}], got {shard_id}")
+    if num_shards == 1:
+        return image_paths
+    return [
+        image_path
+        for index, image_path in enumerate(image_paths)
+        if index % num_shards == shard_id
+    ]
 
 
 def _gaussian_weights(tile_width, tile_height, nbatches):
@@ -457,8 +483,15 @@ if __name__ == "__main__":
     else:
         image_names = [args.input_dir]
 
+    image_names = shard_image_paths(image_names, args.num_shards, args.shard_id)
+
     datalen = len(image_names)
-    print("image_num", datalen)
+    print(
+        f"image_num {datalen} (shard_id={args.shard_id}, num_shards={args.num_shards})"
+    )
+    if datalen == 0:
+        print("No images assigned to this shard. Exit.")
+        raise SystemExit(0)
     if os.path.exists(args.output_dir) is False:
         os.makedirs(args.output_dir)
 

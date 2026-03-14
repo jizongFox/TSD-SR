@@ -84,11 +84,14 @@ Output is written to `outputs/deblur/` with same filename and same spatial size.
 
 This maps one host folder as input and one host folder as output. The output keeps the same subfolder structure as input.
 
+The same interface supports 1 GPU (default) and N GPUs via sharding.
+
 ```bash
 python script/docker_infer_folder.py \
   --host-input-folder /path/on/host/input_images \
   --host-output-folder /path/on/host/output_images \
-  --image-tag tsd-sr:cu128
+  --image-tag tsd-sr:cu128 \
+  --num-gpus 1
 ```
 
 Example:
@@ -96,5 +99,15 @@ Example:
 ```bash
 python script/docker_infer_folder.py \
   --host-input-folder /data/blur_set \
-  --host-output-folder /data/deblur_set
+  --host-output-folder /data/deblur_set \
+  --num-gpus 4
+```
+
+You can also choose specific GPU ids:
+
+```bash
+python script/docker_infer_folder.py \
+  --host-input-folder /data/blur_set \
+  --host-output-folder /data/deblur_set \
+  --gpu-ids 0,2,3
 ```
