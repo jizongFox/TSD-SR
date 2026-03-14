@@ -1,0 +1,10 @@
+.git
+.gitignore
+__pycache__/
+**/__pycache__/
+**/*.pyc
+.downloads/
+outputs/
+checkpoint/
+dataset/
+imgs/

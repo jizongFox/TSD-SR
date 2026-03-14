@@ -1,0 +1,5 @@
+.downloads/
+checkpoint/
+dataset/
+outputs/
+docker-build.log
