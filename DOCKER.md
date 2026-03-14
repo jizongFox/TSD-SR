@@ -10,7 +10,7 @@ python script/docker_build.py --image-tag tsd-sr:cu128 --log-file docker-build.l
 
 This prints full build logs to terminal and also saves them to `docker-build.log`.
 
-## 2) Start container (GPU)
+## 2) (Optional) Start interactive container
 
 ```bash
 docker run --gpus all --rm -it \
@@ -31,13 +31,33 @@ docker run --gpus all --rm -it \
 
 ## 3) Download model assets
 
-Inside container:
+You do not need to enter the container. Run downloader directly from host:
 
 ```bash
-python script/download_models.py
+docker run --rm \
+  -e HUGGINGFACE_HUB_TOKEN=hf_xxx \
+  -v "$PWD":/workspace/TSD-SR \
+  -w /workspace/TSD-SR \
+  tsd-sr:cu128 \
+  python script/download_models.py
 ```
 
-If you are in mainland China, use this practical approach:
+If you are in mainland China (proxy example):
+
+```bash
+docker run --rm --network host \
+  -e HUGGINGFACE_HUB_TOKEN=hf_xxx \
+  -e http_proxy=http://127.0.0.1:10808 \
+  -e https_proxy=http://127.0.0.1:10808 \
+  -e HTTP_PROXY=http://127.0.0.1:10808 \
+  -e HTTPS_PROXY=http://127.0.0.1:10808 \
+  -v "$PWD":/workspace/TSD-SR \
+  -w /workspace/TSD-SR \
+  tsd-sr:cu128 \
+  python script/download_models.py
+```
+
+Alternative practical approach:
 
 1) Download SD3 from Hugging Face mirror (requires your HF token and SD3 permission):
 
@@ -55,10 +75,14 @@ huggingface-cli download stabilityai/stable-diffusion-3-medium-diffusers \
 - `prompt_embeds.pt` -> `dataset/default/prompt_embeds.pt`
 - `pool_embeds.pt` -> `dataset/default/pool_embeds.pt`
 
-3) Verify files:
+3) Verify files from host (no container login):
 
 ```bash
-python script/download_models.py --skip_sd3 --skip_tsdsr
+docker run --rm \
+  -v "$PWD":/workspace/TSD-SR \
+  -w /workspace/TSD-SR \
+  tsd-sr:cu128 \
+  python -c "from pathlib import Path; req=['checkpoint/sd3-medium/transformer','checkpoint/sd3-medium/vae','checkpoint/tsdsr/transformer.safetensors','checkpoint/tsdsr/vae.safetensors','dataset/default/prompt_embeds.pt','dataset/default/pool_embeds.pt']; missing=[p for p in req if not Path(p).exists()]; print('missing:', missing if missing else 'none')"
 ```
 
 Expected files after download:
